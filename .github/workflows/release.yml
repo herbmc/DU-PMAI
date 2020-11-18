@@ -6,6 +6,9 @@ jobs:
   wrap-and-release:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Lua
+        run:  sudo apt install lua5.3
+        
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -18,8 +21,10 @@ jobs:
             path: DU-Orbital-Hud
 
       - name: Version Number
-        run: |
-          echo "VERSION_NUMBER=$( date -u +%Y.%m.%d.%H%M.%S )" >> $GITHUB_ENV
+        run:  echo "VERSION_NUMBER=$( date -u +%Y.%m.%d.%H%M.%S )" >> $GITHUB_ENV
+      
+      - name: Wrap config
+        run:  lua DU-Orbital-Hud/scripts/wrap.lua main/container_monitor.lua t1-t3-monitor.json --slots displayT1a:type=screen core displayT1b:type=screen displayT2a:type=screen displayT2b:type=screen displayT3a:type=screen displayT3b:type=screen
 
       - name: Create Release
         id: create_release
@@ -39,3 +44,13 @@ jobs:
           asset_path: main/pmai_flying_construct.conf
           asset_name: pmai_flying_construct.conf
           asset_content_type: text/yaml
+
+      - name: Upload T1-T3 PB as Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above
+          asset_path: t1-t3-monitor.json
+          asset_name: t1-t3-monitor.json
+          asset_content_type: text/json
